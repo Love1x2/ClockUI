@@ -12,7 +12,7 @@ namespace ClockUI
         public override string Name => "ClockUI";
         public override string Author => "Love1x2";
         public override string Version => "1.0";
-        public override string Description => "A simple digital clock in the style of the original game's UI";
+        public override string Description => "A simple digital clock in the style of the original game's UI.";
 
         public override void ModSetup()
         {
