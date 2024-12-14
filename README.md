@@ -1,3 +1,3 @@
-# ClockUI
+# My Summer Car Mods
 
-A simple digital clock mod for My Summer Car in the style of the original game's UI.
+ClockUI - A simple digital clock mod for My Summer Car in the style of the original game's UI.
