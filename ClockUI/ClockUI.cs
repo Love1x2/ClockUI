@@ -22,8 +22,9 @@ namespace ClockUI
             SetupFunction(Setup.ModSettings, Mod_Settings);
         }
 
-        private string time24;
-        private string time12;
+        private string time24Str;
+        private string time12Str;
+        private int time12;
         private string AmPm;
         private string[] timeFormats = { "24 Hour", "12 Hour" };
 
@@ -116,12 +117,25 @@ namespace ClockUI
         private void Mod_Update()
         {
             // Updates the clock every frame.
-            time24 = string.Format("{0:0}:{1:00}", Hour24, Minute);
-            time12 = string.Format("{0:0}:{1:00} {2}", Hour12, Minute, AmPm);
+            time24Str = string.Format("{0:0}:{1:00}", Hour24, Minute);
+            time12Str = string.Format("{0:0}:{1:00} {2}", time12, Minute, AmPm);
 
-            wristwatchIsOwned = wristwatchPlayMaker.FsmVariables.GetFsmBool("Owned").Value;
+            if (Hour24 >= 13)
+            {
+                time12 = Hour24 - 12;
+                
+            }
+            else if (Hour24 == 0)
+            {
+                time12 = 12;
+            }
+            else
+            {
+                time12 = Hour24;
 
-            if (IsAfternoon)
+            }
+            
+            if (Hour24 >= 12)
             {
                 AmPm = "PM";
             }
@@ -129,6 +143,10 @@ namespace ClockUI
             {
                 AmPm = "AM";
             }
+
+            wristwatchIsOwned = wristwatchPlayMaker.FsmVariables.GetFsmBool("Owned").Value;
+
+            
 
             textPosX = xPosSlider.GetValue();
             textPosY = yPosSlider.GetValue();
@@ -144,10 +162,10 @@ namespace ClockUI
             Vector2 shadowOffset = new Vector2(2, 2);
 
             // Draws the shadow of the main clock text.
-            GUI.Label(new Rect(textPosX + shadowOffset.x, textPosY + shadowOffset.y, rectSizeW, rectSizeH), time12, customShadowStyle);
+            GUI.Label(new Rect(textPosX + shadowOffset.x, textPosY + shadowOffset.y, rectSizeW, rectSizeH), time12Str, customShadowStyle);
 
             // Draws the main text of the clock.
-            GUI.Label(new Rect(textPosX, textPosY, rectSizeW, rectSizeH), time12, customStyle);
+            GUI.Label(new Rect(textPosX, textPosY, rectSizeW, rectSizeH), time12Str, customStyle);
         }
 
         private void DrawClock24()
@@ -156,10 +174,10 @@ namespace ClockUI
             Vector2 shadowOffset = new Vector2(2, 2);
 
             // Draws the shadow of the main clock text.
-            GUI.Label(new Rect(textPosX + shadowOffset.x, textPosY + shadowOffset.y, rectSizeW, rectSizeH), time24, customShadowStyle);
+            GUI.Label(new Rect(textPosX + shadowOffset.x, textPosY + shadowOffset.y, rectSizeW, rectSizeH), time24Str, customShadowStyle);
 
             // Draws the main text of the clock.
-            GUI.Label(new Rect(textPosX, textPosY, rectSizeW, rectSizeH), time24, customStyle);
+            GUI.Label(new Rect(textPosX, textPosY, rectSizeW, rectSizeH), time24Str, customStyle);
         }
 
         private GameObject _sun;
