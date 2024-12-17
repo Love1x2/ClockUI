@@ -11,7 +11,7 @@ namespace ClockUI
         public override string ID => "ClockUI";
         public override string Name => "ClockUI";
         public override string Author => "Love1x2";
-        public override string Version => "1.1";
+        public override string Version => "1.2";
         public override string Description => "A simple digital clock in the style of the original game's UI.";
 
         public override void ModSetup()
@@ -22,13 +22,27 @@ namespace ClockUI
             SetupFunction(Setup.ModSettings, Mod_Settings);
         }
 
-        private string time;
+        private string time24;
+        private string time12;
+        private string AmPm;
+        private string[] timeFormats = { "24 Hour", "12 Hour" };
+
+        private float textPosX;
+        private float textPosY;
+        private float rectSizeW = 100;
+        private float rectSizeH = 100;
+
+        private int fontSize = 23;
 
         private GUIStyle customStyle;
         private GUIStyle customShadowStyle;
 
-        private SettingsCheckBox CheckBoxToggleMod;
-        private SettingsCheckBox CheckBoxWristwatch;
+        private SettingsCheckBox ToggleModCheckBox;
+        private SettingsCheckBox WristwatchCheckBox;
+        private SettingsDropDownList TimeFormatList;
+        private SettingsSliderInt xPosSlider;
+        private SettingsSliderInt yPosSlider;
+        private SettingsSliderInt fontSizeSlider;
 
         private GameObject wristwatch;
         private PlayMakerFSM wristwatchPlayMaker;
@@ -37,8 +51,12 @@ namespace ClockUI
 
         private void Mod_Settings()
         {
-            CheckBoxToggleMod = Settings.AddCheckBox(this, "CheckBoxToggleMod", "Toggle mod", true);
-            CheckBoxWristwatch = Settings.AddCheckBox(this, "CheckBoxWristwatch", "Requires wristwatch", false);
+            ToggleModCheckBox = Settings.AddCheckBox(this, "ToggleModCheckBox", "Toggle mod", true);
+            WristwatchCheckBox = Settings.AddCheckBox(this, "WristwatchCheckBox", "Requires wristwatch", false);
+            TimeFormatList = Settings.AddDropDownList(this, "TimeFormatList", "Time Format", timeFormats);
+            xPosSlider = Settings.AddSlider(this, "xPosSlider", "X Position", 0, 500, 305);
+            yPosSlider = Settings.AddSlider(this, "yPosSlider", "Y Position", 0, 500, 39);
+            fontSizeSlider = Settings.AddSlider(this, "fontSizeSlider", "Font Size", 0, 50, 23);
         }
 
         private void Mod_PostLoad()
@@ -50,15 +68,17 @@ namespace ClockUI
             
             // Main text style.
             customStyle = new GUIStyle();
-            customStyle.fontSize = 23;
+            
             customStyle.normal.textColor = new Color(0.847f, 0.847f, 0.0f);
             customStyle.fontStyle = FontStyle.BoldAndItalic;
+            customStyle.alignment = TextAnchor.UpperRight;
 
             // Main text shadow style.
             customShadowStyle = new GUIStyle();
-            customShadowStyle.fontSize = 23;
+            
             customShadowStyle.normal.textColor = Color.black;
             customShadowStyle.fontStyle = FontStyle.BoldAndItalic;
+            customShadowStyle.alignment = TextAnchor.UpperRight;
 
             _sun = GameObject.Find("SUN/Pivot");
             _rot = _sun.GetComponent<PlayMakerFSM>().FsmVariables.FindFsmFloat("Rotation");
@@ -69,37 +89,77 @@ namespace ClockUI
         }
         private void Mod_OnGUI()
         {
-            if(CheckBoxToggleMod.GetValue() && CheckBoxWristwatch.GetValue() && wristwatchIsOwned)
+            if(ToggleModCheckBox.GetValue() && WristwatchCheckBox.GetValue() && wristwatchIsOwned)
             {
-                DrawClock();
+                if (TimeFormatList.GetSelectedItemIndex() == 0)
+                {
+                    DrawClock24();
+                }
+                else
+                {
+                    DrawClock12();
+                }
             }
-            else if(CheckBoxToggleMod.GetValue() && CheckBoxWristwatch.GetValue() == false)
+            else if(ToggleModCheckBox.GetValue() && WristwatchCheckBox.GetValue() == false)
             {
-                DrawClock();
+                if (TimeFormatList.GetSelectedItemIndex() == 0)
+                {
+                    DrawClock24();
+                }
+                else
+                {
+                    DrawClock12();
+                }
             }
                 
         }
         private void Mod_Update()
         {
             // Updates the clock every frame.
-            time = string.Format("{0:0}:{1:00}", Hour24, Minute);
+            time24 = string.Format("{0:0}:{1:00}", Hour24, Minute);
+            time12 = string.Format("{0:0}:{1:00} {2}", Hour12, Minute, AmPm);
 
             wristwatchIsOwned = wristwatchPlayMaker.FsmVariables.GetFsmBool("Owned").Value;
+
+            if (IsAfternoon)
+            {
+                AmPm = "PM";
+            }
+            else
+            {
+                AmPm = "AM";
+            }
+
+            textPosX = xPosSlider.GetValue();
+            textPosY = yPosSlider.GetValue();
+            fontSize = fontSizeSlider.GetValue();
+
+            customStyle.fontSize = fontSize;
+            customShadowStyle.fontSize = fontSize;
         }
 
-        private void DrawClock()
+        private void DrawClock12()
         {
-            int textPosX = 346;
-            int textPosY = 37;
-
             // Text shadow offset.
             Vector2 shadowOffset = new Vector2(2, 2);
 
             // Draws the shadow of the main clock text.
-            GUI.Label(new Rect(textPosX + shadowOffset.x, textPosY + shadowOffset.y, 100, 100), time, customShadowStyle);
+            GUI.Label(new Rect(textPosX + shadowOffset.x, textPosY + shadowOffset.y, rectSizeW, rectSizeH), time12, customShadowStyle);
 
             // Draws the main text of the clock.
-            GUI.Label(new Rect(textPosX, textPosY, 100, 100), time, customStyle);
+            GUI.Label(new Rect(textPosX, textPosY, rectSizeW, rectSizeH), time12, customStyle);
+        }
+
+        private void DrawClock24()
+        {
+            // Text shadow offset.
+            Vector2 shadowOffset = new Vector2(2, 2);
+
+            // Draws the shadow of the main clock text.
+            GUI.Label(new Rect(textPosX + shadowOffset.x, textPosY + shadowOffset.y, rectSizeW, rectSizeH), time24, customShadowStyle);
+
+            // Draws the main text of the clock.
+            GUI.Label(new Rect(textPosX, textPosY, rectSizeW, rectSizeH), time24, customStyle);
         }
 
         private GameObject _sun;
